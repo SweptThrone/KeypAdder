@@ -7,6 +7,7 @@ KeypAdder adds a weapon - The KeypAdder - that allows you to attach keypads to p
 
 ## How do I use it?
 Drop the KeypAdder_addon folder into your addons folder.  Connecting clients will need the material files.  
+These files can be found in this Workshop addon: https://steamcommunity.com/sharedfiles/filedetails/?id=3001917982  
 
 ## Important notices
 This addon was not tested enough, is missing features, and may not be terribly efficient.  You're encouraged to contribute and/or report issues.  
