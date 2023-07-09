@@ -11,3 +11,7 @@ Drop the KeypAdder_addon folder into your addons folder.  Connecting clients wil
 ## Important notices
 This addon was not tested enough, is missing features, and may not be terribly efficient.  You're encouraged to contribute and/or report issues.  
 Despite mentioning some things about DarkRP, this doesn't support DarkRP very well.  Any player will be able to remove any keypad.  This isn't horribly hard to implement, I just didn't get around to it.  
+
+## Demo videos
+https://www.youtube.com/watch?v=hNZQ1W7mdyI  
+https://www.youtube.com/watch?v=7KcsmmS-oo0
