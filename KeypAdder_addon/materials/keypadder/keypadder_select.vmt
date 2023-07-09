@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+	"$basetexture" "keypadder/keypadder_select"
+	"$translucent" 1
+}
