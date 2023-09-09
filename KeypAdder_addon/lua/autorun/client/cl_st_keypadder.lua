@@ -118,251 +118,269 @@ function surface.DrawArc(arc) --Draw a premade arc.
 end
 -- end stolen code
 
-net.Receive( "KeypAddDoor", function()
-    local opcode = net.ReadUInt( 1 )
+local ChoiceWindow
+local KeypadWindow
+function OpenDoorDecisionMenu( door )
+    local candidateDoor = door
+    local wh = math.min( ScrH() * 0.75, ScrW() * 0.75 )
+    local startTime = UnPredictedCurTime()
+    local timeToPopup = 0.1
 
-    if opcode == 0 then -- opcode 0 = using keypAdded door
-        local candidateDoor = net.ReadEntity()
-        local wh = math.min( ScrH() * 0.75, ScrW() * 0.75 )
-        local startTime = CurTime()
-        local timeToPopup = 0.1
+    ChoiceWindow = vgui.Create( "DFrame" )
+    ChoiceWindow:SetPos( 0, 0 )
+    ChoiceWindow:SetSize( wh + 20, wh )
+    ChoiceWindow:SetTitle( "" )
+    ChoiceWindow:SetVisible( true )
+    ChoiceWindow:SetDraggable( false )
+    ChoiceWindow:ShowCloseButton( false )
+    ChoiceWindow:MakePopup()
+    ChoiceWindow:SetKeyboardInputEnabled( false )
+    ChoiceWindow:Center()
+    ChoiceWindow.leftA = 128
+    ChoiceWindow.riteA = 128
+    ChoiceWindow.Choice = nil
+    function ChoiceWindow:Paint()
+        draw.Arc( wh/2,      wh/2, math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * wh/2, 0, wh/2 ), math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * ( wh * 0.216 ), 0, ( wh * 0.216 ) ), 90, 270, 3, Color( 255, 255, 255, self.leftA ) )
+        draw.Arc( wh/2 + 20, wh/2, math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * wh/2, 0, wh/2 ), math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * ( wh * 0.216 ), 0, ( wh * 0.216 ) ), -90, 90, 3, Color( 255, 255, 255, self.riteA ) )
+    
+        surface.SetMaterial( doorknobIcon )
+        surface.SetDrawColor( 255, 255, 255, math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * 255, 0, 255 ) )
+        surface.DrawTexturedRect( ( wh * 0.0284 ), wh/2 - ( wh * 0.079 ), ( wh * 0.158 ), ( wh * 0.158 ) )
 
-        local ChoiceWindow = vgui.Create( "DFrame" )
-        ChoiceWindow:SetPos( 0, 0 )
-        ChoiceWindow:SetSize( wh + 20, wh )
-        ChoiceWindow:SetTitle( "" )
-        ChoiceWindow:SetVisible( true )
-        ChoiceWindow:SetDraggable( false )
-        ChoiceWindow:ShowCloseButton( false )
-        ChoiceWindow:MakePopup()
-        ChoiceWindow:SetKeyboardInputEnabled( false )
-        ChoiceWindow:Center()
-        ChoiceWindow.leftA = 128
-        ChoiceWindow.riteA = 128
-        ChoiceWindow.Choice = nil
-        function ChoiceWindow:Paint()
-            draw.Arc( wh/2,      wh/2, math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * wh/2, 0, wh/2 ), math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * ( wh * 0.216 ), 0, ( wh * 0.216 ) ), 90, 270, 3, Color( 255, 255, 255, self.leftA ) )
-            draw.Arc( wh/2 + 20, wh/2, math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * wh/2, 0, wh/2 ), math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * ( wh * 0.216 ), 0, ( wh * 0.216 ) ), -90, 90, 3, Color( 255, 255, 255, self.riteA ) )
-        
-            surface.SetMaterial( doorknobIcon )
-            surface.SetDrawColor( 255, 255, 255, math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * 255, 0, 255 ) )
-            surface.DrawTexturedRect( ( wh * 0.0284 ), wh/2 - ( wh * 0.079 ), ( wh * 0.158 ), ( wh * 0.158 ) )
-
-            surface.SetMaterial( keypadIcon )
-            surface.SetDrawColor( 255, 255, 255, math.Clamp( ( ( CurTime() - startTime ) / timeToPopup ) * 255, 0, 255 ) )
-            surface.DrawTexturedRect( wh-( wh * 0.0284 )-( wh * 0.133 ), wh/2 - ( wh * 0.079 ), ( wh * 0.158 ), ( wh * 0.158 ) )
+        surface.SetMaterial( keypadIcon )
+        surface.SetDrawColor( 255, 255, 255, math.Clamp( ( ( UnPredictedCurTime() - startTime ) / timeToPopup ) * 255, 0, 255 ) )
+        surface.DrawTexturedRect( wh-( wh * 0.0284 )-( wh * 0.133 ), wh/2 - ( wh * 0.079 ), ( wh * 0.158 ), ( wh * 0.158 ) )
+    end
+    function ChoiceWindow:Think()
+        self.leftA = 128
+        self.riteA = 128
+        self.Choice = nil
+        if gui.MouseX() <= ScrW() / 2 - 10 and math.Distance( ScrW() / 2, ScrH() / 2, gui.MouseX(), gui.MouseY() ) > math.min( ScrH() * 0.075, ScrW() * 0.075 ) then
+            self.leftA = 255
+            self.Choice = 1
         end
-        function ChoiceWindow:Think()
-            self.leftA = 128
-            self.riteA = 128
-            self.Choice = nil
-            if gui.MouseX() <= ScrW() / 2 - 10 and math.Distance( ScrW() / 2, ScrH() / 2, gui.MouseX(), gui.MouseY() ) > math.min( ScrH() * 0.075, ScrW() * 0.075 ) then
-                self.leftA = 255
-                self.Choice = 1
-            end
-            if gui.MouseX() >= ScrW() / 2 + 10 and math.Distance( ScrW() / 2, ScrH() / 2, gui.MouseX(), gui.MouseY() ) > math.min( ScrH() * 0.075, ScrW() * 0.075 ) then
-                self.riteA = 255
-                self.Choice = 2
-            end
+        if gui.MouseX() >= ScrW() / 2 + 10 and math.Distance( ScrW() / 2, ScrH() / 2, gui.MouseX(), gui.MouseY() ) > math.min( ScrH() * 0.075, ScrW() * 0.075 ) then
+            self.riteA = 255
+            self.Choice = 2
+        end
 
-            if not LocalPlayer():KeyDown( IN_USE ) then
-                if self.Choice == 1 then
-                    net.Start( "KeypAddUse" )
-                        net.WriteEntity( candidateDoor )
-                    net.SendToServer()
-                elseif self.Choice == 2 then
-                    local enterPassword = ""
-                    local keypadMat = Material( "../data/sweptthrone/keypad_sheet_unlit" )
-                    -- you can only use WasKeyPressed in Move hooks
-                    -- so this will have to do
-                    -- 0 = not down, 2 = pressed, 1 = down
-                    local inputState = {
-                        [ KEY_1 ] = 0,
-                        [ KEY_2 ] = 0,
-                        [ KEY_3 ] = 0,
-                        [ KEY_4 ] = 0,
-                        [ KEY_5 ] = 0,
-                        [ KEY_6 ] = 0,
-                        [ KEY_7 ] = 0,
-                        [ KEY_8 ] = 0,
-                        [ KEY_9 ] = 0,
-                        [ KEY_PAD_1 ] = 0,
-                        [ KEY_PAD_2 ] = 0,
-                        [ KEY_PAD_3 ] = 0,
-                        [ KEY_PAD_4 ] = 0,
-                        [ KEY_PAD_5 ] = 0,
-                        [ KEY_PAD_6 ] = 0,
-                        [ KEY_PAD_7 ] = 0,
-                        [ KEY_PAD_8 ] = 0,
-                        [ KEY_PAD_9 ] = 0,
-                    }
+        if not LocalPlayer():KeyDown( IN_USE ) then
+            if self.Choice == 1 then
+                net.Start( "KeypAddUse" )
+                    net.WriteEntity( candidateDoor )
+                net.SendToServer()
+            elseif self.Choice == 2 then
+                if not IsValid( KeypadWindow ) then
+                local enterPassword = ""
+                local keypadMat = Material( "../data/sweptthrone/keypad_sheet_unlit" )
+                -- you can only use WasKeyPressed in Move hooks
+                -- so this will have to do
+                -- 0 = not down, 2 = pressed, 1 = down
+                local inputState = {
+                    [ KEY_1 ] = 0,
+                    [ KEY_2 ] = 0,
+                    [ KEY_3 ] = 0,
+                    [ KEY_4 ] = 0,
+                    [ KEY_5 ] = 0,
+                    [ KEY_6 ] = 0,
+                    [ KEY_7 ] = 0,
+                    [ KEY_8 ] = 0,
+                    [ KEY_9 ] = 0,
+                    [ KEY_PAD_1 ] = 0,
+                    [ KEY_PAD_2 ] = 0,
+                    [ KEY_PAD_3 ] = 0,
+                    [ KEY_PAD_4 ] = 0,
+                    [ KEY_PAD_5 ] = 0,
+                    [ KEY_PAD_6 ] = 0,
+                    [ KEY_PAD_7 ] = 0,
+                    [ KEY_PAD_8 ] = 0,
+                    [ KEY_PAD_9 ] = 0,
+                }
 
-                    local KeypadWindow = vgui.Create( "DFrame" )
-                    KeypadWindow:SetPos( 0, 0 )
-                    KeypadWindow:SetSize( 320, 550 )
-                    KeypadWindow:SetTitle( "" )
-                    KeypadWindow:SetVisible( true )
-                    KeypadWindow:SetDraggable( false )
-                    KeypadWindow:ShowCloseButton( false )
-                    KeypadWindow:MakePopup()
-                    KeypadWindow:Center()
-                    function KeypadWindow:Think()
-                        -- recreating KeyPressed logic
-                        if input.IsKeyDown( KEY_PAD_ENTER ) or input.IsKeyDown( KEY_ENTER ) then
-                            if enterPassword == "" then enterPassword = "0" end
-                            net.Start( "KeypAddDoor" )
-                                net.WriteUInt( 1, 2 )
-                                net.WriteUInt( tonumber( enterPassword ), 20 )
-                                net.WriteEntity( candidateDoor )
-                            net.SendToServer()
-                            self:Close()
-                        end
-                        if input.IsKeyDown( KEY_ESCAPE ) then
-                            self:Close()
-                        end
-                        for k,v in pairs( inputState ) do
-                            if v and not input.IsKeyDown( k ) then
-                                inputState[ k ] = 0
-                            end
-                            if v and input.IsKeyDown( k ) then
-                                inputState[ k ] = 1
-                            end
-                            if v == 0 and input.IsKeyDown( k ) then
-                                inputState[ k ] = 2
-                            end
-
-                            if v == 2 then
-                                local num
-                                if k > 37 then
-                                    num = k - 37
-                                elseif k > 1 then
-                                    num = k - 1
-                                end
-                                if #enterPassword < 6 then
-                                    enterPassword = enterPassword .. num
-                                    surface.PlaySound( "buttons/button15.wav" )
-                                else
-                                    surface.PlaySound( "buttons/button16.wav" )
-                                end
-                            end
-                        end
-                    end
-                    function KeypadWindow:Init()
-                        self.startTime = SysTime()
-                    end
-                    function KeypadWindow:Paint( w, h )
-                        Derma_DrawBackgroundBlur( self, self.startTime )
-
-                        surface.SetDrawColor( 255, 255, 255 )
-                        surface.SetMaterial( keypadMat )
-                        surface.DrawTexturedRectUV( 0, 0, w-20, h, 0, 0, 300/550, 1 )
-
-                        surface.SetDrawColor( 97, 252, 3 )
-                        draw.NoTexture()
-                        surface.DrawRect( 69, 77, 162, 93 )
-
-                        surface.SetTextPos( 80, 100 )
-                        surface.SetFont( "KeypadNumbers" )
-                        surface.SetTextColor( 64, 64, 64 )
-                        surface.DrawText( enterPassword )
-                    end
-
-                    local num = 1
-                    for i = 0, 2 do
-                        for j = 0, 2 do
-                            local NumButton = vgui.Create( "DButton", KeypadWindow )
-                            NumButton:SetPos( 34 + 80 * j, 264 + 76 * i )
-                            NumButton:SetSize( 70, 70 )
-                            NumButton:SetTextColor( Color( 32, 32, 32 ) )
-                            NumButton:SetFont( "KeypadNumbers" )
-                            NumButton:SetText( num )
-                            NumButton.Number = num
-                            NumButton:SetContentAlignment( 5 )
-                            function NumButton:Paint( w, h )
-                                surface.SetDrawColor( 162, 102, 88 )
-                                if self:IsHovered() then
-                                    surface.SetDrawColor( 234, 167, 153 )
-                                end
-                                if self:IsDown() or inputState[ self.Number + 1 ] == 2 or inputState[ self.Number + 37 ] == 2 then
-                                    surface.SetDrawColor( 115, 73, 66 )
-                                end
-                                draw.NoTexture()
-                                surface.DrawRect( 0, 0, w, h )
-                            end
-                            function NumButton:DoClick()
-                                if #enterPassword < 6 then
-                                    enterPassword = enterPassword .. self.Number
-                                    surface.PlaySound( "buttons/button15.wav" )
-                                else
-                                    surface.PlaySound( "buttons/button16.wav" )
-                                end
-                            end
-                            num = num + 1
-                        end
-                    end
-
-                    local CloseButton = vgui.Create( "DButton", KeypadWindow )
-                    CloseButton:SetPos( 300, 0 )
-                    CloseButton:SetSize( 20, 40 )
-                    CloseButton:SetText( "X" )
-                    CloseButton:SetTextColor(Color(255,255,255))
-                    CloseButton.DoClick = function( self )
-                        KeypadWindow:Close()
-                        surface.PlaySound("ui/buttonclick.wav")
-                    end
-                    CloseButton.Paint = function( self, w, h )
-                        if CloseButton:IsHovered() then
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 128, 0, 0, 255 ) )
-                        else
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 0, 0, 255 ) )
-                        end
-                        surface.SetDrawColor( color_black )
-                    end
-                    
-                    local ClearButton = vgui.Create( "DButton", KeypadWindow )
-                    ClearButton:SetPos( 300, 77 )
-                    ClearButton:SetSize( 20, 93 )
-                    ClearButton:SetText( "C" )
-                    ClearButton:SetTextColor(Color(255,255,255))
-                    function ClearButton:DoClick()
-                        enterPassword = ""
-                        surface.PlaySound("ui/buttonclick.wav")
-                    end
-                    ClearButton.Paint = function( self, w, h )
-                        if ClearButton:IsHovered() then
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 128, 0, 0, 255 ) )
-                        else
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 0, 0, 255 ) )
-                        end
-                        surface.SetDrawColor( color_black )
-                    end
-
-                    local EnterButton = vgui.Create( "DButton", KeypadWindow )
-                    EnterButton:SetPos( 300, 264 )
-                    EnterButton:SetSize( 20, 230 )
-                    EnterButton:SetText( ">" )
-                    EnterButton:SetTextColor(Color(255,255,255))
-                    function EnterButton:DoClick()
+                KeypadWindow = vgui.Create( "DFrame" )
+                KeypadWindow:SetPos( 0, 0 )
+                KeypadWindow:SetSize( 320, 550 )
+                KeypadWindow:SetTitle( "" )
+                KeypadWindow:SetVisible( true )
+                KeypadWindow:SetDraggable( false )
+                KeypadWindow:ShowCloseButton( false )
+                KeypadWindow:MakePopup()
+                KeypadWindow:Center()
+                function KeypadWindow:Think()
+                    -- recreating KeyPressed logic
+                    if input.IsKeyDown( KEY_PAD_ENTER ) or input.IsKeyDown( KEY_ENTER ) then
                         if enterPassword == "" then enterPassword = "0" end
                         net.Start( "KeypAddDoor" )
                             net.WriteUInt( 1, 2 )
                             net.WriteUInt( tonumber( enterPassword ), 20 )
                             net.WriteEntity( candidateDoor )
                         net.SendToServer()
-                        KeypadWindow:Close()
+                        self:Close()
                     end
-                    EnterButton.Paint = function( self, w, h )
-                        if EnterButton:IsHovered() then
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 96, 0, 255 ) )
-                        else
-                            draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 192, 0, 255 ) )
+                    if input.IsKeyDown( KEY_ESCAPE ) then
+                        self:Close()
+                    end
+                    for k,v in pairs( inputState ) do
+                        if v and not input.IsKeyDown( k ) then
+                            inputState[ k ] = 0
                         end
-                        surface.SetDrawColor( color_black )
+                        if v and input.IsKeyDown( k ) then
+                            inputState[ k ] = 1
+                        end
+                        if v == 0 and input.IsKeyDown( k ) then
+                            inputState[ k ] = 2
+                        end
+
+                        if v == 2 then
+                            local num
+                            if k > 37 then
+                                num = k - 37
+                            elseif k > 1 then
+                                num = k - 1
+                            end
+                            if #enterPassword < 6 then
+                                enterPassword = enterPassword .. num
+                                surface.PlaySound( "buttons/button15.wav" )
+                            else
+                                surface.PlaySound( "buttons/button16.wav" )
+                            end
+                        end
                     end
                 end
-                self:Close()
+                function KeypadWindow:Init()
+                    self.startTime = SysTime()
+                end
+                function KeypadWindow:Paint( w, h )
+                    Derma_DrawBackgroundBlur( self, self.startTime )
+
+                    surface.SetDrawColor( 255, 255, 255 )
+                    surface.SetMaterial( keypadMat )
+                    surface.DrawTexturedRectUV( 0, 0, w-20, h, 0, 0, 300/550, 1 )
+
+                    surface.SetDrawColor( 97, 252, 3 )
+                    draw.NoTexture()
+                    surface.DrawRect( 69, 77, 162, 93 )
+
+                    surface.SetTextPos( 80, 100 )
+                    surface.SetFont( "KeypadNumbers" )
+                    surface.SetTextColor( 64, 64, 64 )
+                    surface.DrawText( enterPassword )
+                end
+
+                local num = 1
+                for i = 0, 2 do
+                    for j = 0, 2 do
+                        local NumButton = vgui.Create( "DButton", KeypadWindow )
+                        NumButton:SetPos( 34 + 80 * j, 264 + 76 * i )
+                        NumButton:SetSize( 70, 70 )
+                        NumButton:SetTextColor( Color( 32, 32, 32 ) )
+                        NumButton:SetFont( "KeypadNumbers" )
+                        NumButton:SetText( num )
+                        NumButton.Number = num
+                        NumButton:SetContentAlignment( 5 )
+                        function NumButton:Paint( w, h )
+                            surface.SetDrawColor( 162, 102, 88 )
+                            if self:IsHovered() then
+                                surface.SetDrawColor( 234, 167, 153 )
+                            end
+                            if self:IsDown() or inputState[ self.Number + 1 ] == 2 or inputState[ self.Number + 37 ] == 2 then
+                                surface.SetDrawColor( 115, 73, 66 )
+                            end
+                            draw.NoTexture()
+                            surface.DrawRect( 0, 0, w, h )
+                        end
+                        function NumButton:DoClick()
+                            if #enterPassword < 6 then
+                                enterPassword = enterPassword .. self.Number
+                                surface.PlaySound( "buttons/button15.wav" )
+                            else
+                                surface.PlaySound( "buttons/button16.wav" )
+                            end
+                        end
+                        num = num + 1
+                    end
+                end
+
+                local CloseButton = vgui.Create( "DButton", KeypadWindow )
+                CloseButton:SetPos( 300, 0 )
+                CloseButton:SetSize( 20, 40 )
+                CloseButton:SetText( "X" )
+                CloseButton:SetTextColor(Color(255,255,255))
+                CloseButton.DoClick = function( self )
+                    KeypadWindow:Close()
+                    surface.PlaySound("ui/buttonclick.wav")
+                end
+                CloseButton.Paint = function( self, w, h )
+                    if CloseButton:IsHovered() then
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 128, 0, 0, 255 ) )
+                    else
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 0, 0, 255 ) )
+                    end
+                    surface.SetDrawColor( color_black )
+                end
+                
+                local ClearButton = vgui.Create( "DButton", KeypadWindow )
+                ClearButton:SetPos( 300, 77 )
+                ClearButton:SetSize( 20, 93 )
+                ClearButton:SetText( "C" )
+                ClearButton:SetTextColor(Color(255,255,255))
+                function ClearButton:DoClick()
+                    enterPassword = ""
+                    surface.PlaySound("ui/buttonclick.wav")
+                end
+                ClearButton.Paint = function( self, w, h )
+                    if ClearButton:IsHovered() then
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 128, 0, 0, 255 ) )
+                    else
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 0, 0, 255 ) )
+                    end
+                    surface.SetDrawColor( color_black )
+                end
+
+                local EnterButton = vgui.Create( "DButton", KeypadWindow )
+                EnterButton:SetPos( 300, 264 )
+                EnterButton:SetSize( 20, 230 )
+                EnterButton:SetText( ">" )
+                EnterButton:SetTextColor(Color(255,255,255))
+                function EnterButton:DoClick()
+                    if enterPassword == "" then enterPassword = "0" end
+                    net.Start( "KeypAddDoor" )
+                        net.WriteUInt( 1, 2 )
+                        net.WriteUInt( tonumber( enterPassword ), 20 )
+                        net.WriteEntity( candidateDoor )
+                    net.SendToServer()
+                    KeypadWindow:Close()
+                end
+                EnterButton.Paint = function( self, w, h )
+                    if EnterButton:IsHovered() then
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 96, 0, 255 ) )
+                    else
+                        draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 192, 0, 255 ) )
+                    end
+                    surface.SetDrawColor( color_black )
+                end
+                end
             end
+            self:Close()
         end
+    end
+end
+
+hook.Add( "KeyPress", "KeypadDecisionWindow", function( ply, key )
+    if key == IN_USE then
+        local tr = LocalPlayer():GetEyeTrace()
+        local ent = tr.Entity
+        if tr.HitPos:DistToSqr( tr.StartPos ) <= 84*84 and IsValid( ent ) and ent:GetClass() == "prop_door_rotating" and ent:GetModel() == "models/props_c17/door01_left.mdl" and ent:GetNWBool( "KeypAdded", false ) and not IsValid( ChoiceWindow ) then
+            OpenDoorDecisionMenu( ent )
+        end
+    end
+end )
+
+net.Receive( "KeypAddDoor", function()
+    local opcode = net.ReadUInt( 1 )
+
+    if opcode == 0 then -- opcode 0 = using keypAdded door, this actually isn't used anymore
+        OpenDoorDecisionMenu( net.ReadEntity() )
     elseif opcode == 1 then -- opcode 1 = receive wordle guess
         local guess = net.ReadUInt( 20 )
 

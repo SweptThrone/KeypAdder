@@ -16,7 +16,7 @@ net.Receive( "KeypAddDoor", function( len, ply )
     if door:GetModel() ~= "models/props_c17/door01_left.mdl" then return end
 
     if opcode == 0 then -- opcode 0 = install keypad
-        -- todo: need more checks:
+        -- todo:  need more checks:
         if tr.StartPos:DistToSqr( tr.HitPos ) <= 84*84 then
             sound.Play( "npc/dog/dog_servo12.wav", door:GetBonePosition( 1 ), 80, 100, 1 )
             timer.Simple( 0.4, function()
@@ -41,7 +41,7 @@ net.Receive( "KeypAddDoor", function( len, ply )
             door:Fire( "Lock" )
         end
     elseif opcode == 1 then -- opcode 1 = use keypad
-        -- todo: need more checks:
+        -- todo:  need more checks:
         if ply:GetUseEntity() == candidateDoor then
             if password == door.KeypAddPassword then
                 sound.Play( "buttons/button3.wav", door:GetBonePosition( 1 ), 80, 100, 1 )
@@ -56,7 +56,7 @@ net.Receive( "KeypAddDoor", function( len, ply )
             end
         end
     elseif opcode == 2 then -- opcode 2 = crack keypad
-        -- todo: need more checks:
+        -- todo:  need more checks:
         if IsValid( ply:GetActiveWeapon().Cracking ) and door == ply:GetActiveWeapon().Cracking and ply:GetActiveWeapon():GetClass() == "weapon_st_keypadcracker" then
             password = string.Split( password, "" )
 
@@ -111,9 +111,8 @@ net.Receive( "KeypAddDoor", function( len, ply )
             end )
         end
     elseif opcode == 3 then -- opcode 3 = remove keypad
+        -- todo:  need more checks, mainly to make sure the player is allowed to remove a keypad
         if tr.StartPos:DistToSqr( tr.HitPos ) <= 84*84 then
-            --sound.Play( "npc/dog/dog_servo12.wav", door:GetBonePosition( 1 ), 80, 100, 1 )
-            --timer.Simple( 0.4, function()
             local pos = door:GetBonePosition( 1 )
             local ed = EffectData()
             ed:SetOrigin( pos )
@@ -121,15 +120,9 @@ net.Receive( "KeypAddDoor", function( len, ply )
             util.Effect( "ManhackSparks", ed )
 
             sound.Play( "physics/metal/metal_solid_impact_bullet" .. math.random( 1 ,4 ) .. ".wav", door:GetBonePosition( 1 ), 80, 100, 1 )
-                -- the doors work without the bodygroup, but a little visuals looks nice.
-                -- on models without bodygroup 1.3, it just doesn't change anything.
             door:SetBodygroup( 1, 1 )
-                -- this is a purely cosmetic netvar for when the bodygroup does not exist
             door:SetNWBool( "KeypAdded_Fallback", false )
-            --end )
 
-            -- store password on server only.
-            -- this happens immediately so you don't have to wait for the visual to play.
             door.KeypAddPassword = nil
             door:SetNWBool( "KeypAdded", false )
             door:Fire( "Unlock" )
@@ -146,9 +139,10 @@ net.Receive( "KeypAddUse", function( len, ply )
 
     if door ~= candidate then return end
 
-    -- todo: need more checks
+    -- todo:  need more checks
     if IsValid( door ) and door:GetClass() == "prop_door_rotating" and door:GetModel() == "models/props_c17/door01_left.mdl" and door:GetNWBool( "KeypAdded", false ) then
-        door:Use( ply, ply, USE_ON )
+        -- use this so it's compatible with Stealthy Door Opening
+        door:Fire( "Use", "", 0, ply, ply )
     end
 
 end )
@@ -168,14 +162,10 @@ hook.Add( "AcceptInput", "UnlockAndLockKeypAddedDoors", function( ent, inp, act,
     end
 end )
 
--- this hooks is to show the interface
--- todo: recreate this on client so the interface appears immediately even under lag?
+-- this hook prevents using a keypadded door so that we can show a menu instead
+-- this happens on the client instantly
 hook.Add( "PlayerUse", "DoorKeypAdds", function( ply, ent )
-    if IsValid( ent ) and ent:GetClass() == "prop_door_rotating" and ent:GetModel() == "models/props_c17/door01_left.mdl" and ent:GetNWBool( "KeypAdded", false ) and ply:KeyPressed( IN_USE ) then
-        net.Start( "KeypAddDoor" )
-            net.WriteUInt( 0, 1 )
-            net.WriteEntity( ent )
-        net.Send( ply )
-        return false
-    end
+
+    if ent:GetNWBool( "KeypAdded", false ) then return false end
+
 end )
